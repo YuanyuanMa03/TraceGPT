@@ -170,6 +170,107 @@ def gelu(x: np.ndarray) -> np.ndarray:
     return 0.5 * x * (1 + np.tanh(np.sqrt(2 / np.pi) * (x + 0.044715 * x ** 3)))
 
 
+def sinusoidal_position_encoding(seq_len: int, d_model: int) -> np.ndarray:
+    """
+    Sinusoidal positional encoding (from "Attention Is All You Need").
+
+    formula:
+        PE(pos, 2i)   = sin(pos / 10000^(2i/d_model))
+        PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
+
+    Parameters
+    ----------
+    seq_len : int
+        Maximum sequence length.
+    d_model : int
+        Embedding dimension (must be even).
+
+    Returns
+    -------
+    np.ndarray
+        Positional encoding matrix, shape (seq_len, d_model).
+    """
+    assert d_model % 2 == 0, f"d_model must be even, got {d_model}"
+    pe = np.zeros((seq_len, d_model))
+    position = np.arange(seq_len)[:, np.newaxis]  # (seq_len, 1)
+    div_term = 10000 ** (np.arange(0, d_model, 2) / d_model)  # (d_model/2,)
+    pe[:, 0::2] = np.sin(position / div_term)  # even indices
+    pe[:, 1::2] = np.cos(position / div_term)  # odd indices
+    return pe
+
+
+def multi_head_attention(
+    X: np.ndarray,
+    W_Q: np.ndarray,
+    W_K: np.ndarray,
+    W_V: np.ndarray,
+    W_O: np.ndarray,
+    n_heads: int,
+    mask: np.ndarray | None = None,
+) -> np.ndarray:
+    """
+    Multi-head attention.
+
+    formula:
+        heads = split(X @ W_Q, X @ W_K, X @ W_V) into n_heads
+        for each head h:
+            attn_h = softmax(Q_h @ K_h^T / sqrt(d_k) + mask) @ V_h
+        concat all attn_h, then project: output = concat @ W_O
+
+    Parameters
+    ----------
+    X : np.ndarray
+        Input, shape (seq_len, d_model).
+    W_Q, W_K, W_V : np.ndarray
+        Projection matrices, shape (d_model, d_model).
+    W_O : np.ndarray
+        Output projection, shape (d_model, d_model).
+    n_heads : int
+        Number of attention heads.
+    mask : np.ndarray or None
+        Attention mask, shape (seq_len, seq_len).
+
+    Returns
+    -------
+    np.ndarray
+        Output, shape (seq_len, d_model).
+    """
+    seq_len, d_model = X.shape
+    d_k = d_model // n_heads
+    assert d_model % n_heads == 0, f"d_model={d_model} must be divisible by n_heads={n_heads}"
+
+    # Project to Q, K, V: (seq_len, d_model)
+    Q = X @ W_Q  # (seq_len, d_model)
+    K = X @ W_K
+    V = X @ W_V
+
+    # Reshape to (n_heads, seq_len, d_k)
+    Q_heads = Q.reshape(seq_len, n_heads, d_k).transpose(1, 0, 2)  # (n_heads, seq_len, d_k)
+    K_heads = K.reshape(seq_len, n_heads, d_k).transpose(1, 0, 2)
+    V_heads = V.reshape(seq_len, n_heads, d_k).transpose(1, 0, 2)
+
+    # Scaled dot-product attention per head
+    head_outputs = []
+    for h in range(n_heads):
+        Q_h = Q_heads[h]  # (seq_len, d_k)
+        K_h = K_heads[h]
+        V_h = V_heads[h]
+
+        scores = Q_h @ K_h.T / np.sqrt(d_k)  # (seq_len, seq_len)
+        if mask is not None:
+            scores = scores + (1 - mask) * (-1e9)
+        weights = softmax(scores)
+        head_out = weights @ V_h  # (seq_len, d_k)
+        head_outputs.append(head_out)
+
+    # Concatenate heads: (seq_len, d_model)
+    concat = np.concatenate(head_outputs, axis=-1)  # (seq_len, n_heads * d_k) = (seq_len, d_model)
+
+    # Output projection
+    output = concat @ W_O  # (seq_len, d_model)
+    return output
+
+
 def scaled_dot_product_attention(
     Q: np.ndarray,
     K: np.ndarray,

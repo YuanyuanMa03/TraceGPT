@@ -60,7 +60,9 @@ TraceGPT/
 ├── levels/                    # Progressive learning levels
 │   ├── level0_next_token.py   # Embedding → Projection → Softmax → Prediction
 │   ├── level1_causal_attention.py  # Q/K/V, Attention, Causal Mask
-│   └── level2_transformer_block.py  # Full Transformer block
+│   ├── level2_transformer_block.py  # Full Transformer block
+│   ├── level3_positional_encoding.py  # Sinusoidal PE: why and how
+│   └── level4_multihead_gpt.py    # Multi-head attention + tiny GPT forward pass
 ├── bugs/                      # Common bugs with wrong/correct + tests
 │   ├── 001_softmax_wrong_axis/
 │   ├── 002_causal_mask_reversed/
@@ -82,6 +84,14 @@ Build single-head causal self-attention from scratch: Q, K, V projections, atten
 
 ### Level 2: Transformer Block
 A complete Transformer block: attention + residual + layer norm + feed-forward network + residual + layer norm.
+
+### Level 3: Sinusoidal Positional Encoding
+Understand why Transformers need positional encoding (attention is permutation-invariant!),
+and how sinusoidal encoding gives each position a unique fingerprint.
+
+### Level 4: Multi-Head Attention + Tiny GPT Forward Pass
+A complete tiny GPT forward pass: token embedding + positional encoding → multi-head causal
+attention (2 heads) → residual + LayerNorm → FFN → residual + LayerNorm → output projection → softmax → prediction.
 
 ## Bug Library
 
@@ -141,24 +151,11 @@ itself and earlier tokens.
 ## Roadmap
 
 - [x] v0.1: Core tracer, ops, 3 levels, 5 bugs, tests
-- [ ] v0.2: Multi-head attention, positional encoding
+- [x] v0.2: Multi-head attention, positional encoding
 - [ ] v0.3: Full GPT-2 forward pass (tiny model)
 - [ ] v0.4: Training loop with backprop (educational)
 - [ ] v0.5: Interactive Jupyter notebooks
 - [ ] v1.0: Paper, documentation website, CI/CD
-
-## Citation
-
-If you use TraceGPT in your research or teaching, please cite:
-
-```bibtex
-@software{tracegpt2026,
-  title = {TraceGPT: A Calculator-Verifiable Transformer Learning Framework},
-  author = {Yuanyuan Ma},
-  year = {2026},
-  url = {https://github.com/your-username/TraceGPT}
-}
-```
 
 ## License
 
