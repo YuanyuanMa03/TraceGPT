@@ -21,46 +21,55 @@ TraceGPT is a Transformer where every matrix has word labels, every attention we
 
 **👉 [Interactive Demo](https://yuanyuanma03.github.io/TraceGPT/)** — Trace a sentence in your browser, no install needed.
 
-## The "Aha!" Demo
+## The "Aha! Demo"
 
 ```bash
 python -m levels.level6_showcase
 ```
 
-Output:
+**Key Output:**
 
+### Word Embeddings
 ```
-╔══════════════════════════════════════════════════════════╗
-║  TraceGPT Showcase: One Sentence, Fully Traced          ║
-║  "the cat sat" → What comes next?                      ║
-╚══════════════════════════════════════════════════════════╝
-
-  Step 2: Word Embeddings — Words Become Numbers
-
             animal    action  location      size   emotion   grammar      time  concrete
-  "the" │     0.100     0.000     0.000     0.000     0.000     0.900     0.000     0.000
-  "cat" │     0.900     0.100     0.000     0.300     0.200     0.000     0.000     0.800
-  "sat" │     0.100     0.900     0.100     0.000     0.000     0.000     0.300     0.100
+  "the" │     0.100     0.000     0.000     0.000     0.000     0.900     0.000     0.000 │
+  "cat" │     0.900     0.100     0.000     0.300     0.200     0.000     0.000     0.800 │
+  "sat" │     0.100     0.900     0.100     0.000     0.000     0.000     0.300     0.100 │
+```
 
-  💡 "cat" has high animal (0.9) and concrete (0.8)
-     "sat" has high action (0.9) — it's a verb!
-     "the" is mostly grammar (0.9)
+**💡 Reading this:**
+- "cat" = high animal (0.9) + concrete (0.8) — it's an animal!
+- "sat" = high action (0.9) — it's a verb!
+- "the" = high grammar (0.9) — it's a grammar word!
 
-  Step 6: Attention Weights — "the cat sat"
+### Attention Weights
+```
+Attention Weights: "the cat sat"
 
            the     cat     sat
-   ────────────────────────
-   the │█████                    │ 1.00  0.00  0.00
-   cat │░░░░░   ▓▓▓▓▓            │ 0.38  0.62  0.00
-   sat │░░░░░   ▒▒▒▒▒   ░░░░░    │ 0.29  0.40  0.31
-
-  💡 "cat" pays most attention to itself (0.62)
-     "sat" looks at "cat" the most (0.40) — it "knows" a cat sat!
-
-  🎯 Prediction: "dog" (prob=0.26)
+  ────────────────────────
+  the  │█████                    │ 1.00  0.00  0.00  ← "the" sees only itself
+  cat  │░░░░░   ▓▓▓▓▓            │ 0.38  0.62  0.00  ← "cat" looks at itself most
+  sat  │░░░░░   ▒▒▒▒▒   ░░░░░    │ 0.29  0.40  0.31  ← "sat" looks at "cat"! 🤯
 ```
 
-**Every matrix has word labels. Every attention weight tells a story.**
+**💡 The model "knows" a cat is sitting!** "sat" pays most attention to "cat" (40%).
+
+### Prediction
+```
+After "the cat sat" → What comes next?
+
+     dog  ███████░░░░░░░░░░░░░░░░░░░░░░░  0.2585 ← predicted
+     cat  ████░░░░░░░░░░░░░░░░░░░░░░░░░░  0.1516
+    park  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░  0.1173
+     mat  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░  0.1027
+```
+
+The last word's output is most similar to **"dog"** (1.7305) — both are animals!
+
+📄 Full trace: [reports/level6_showcase.md](reports/level6_showcase.md)
+
+[**Try the demo →**](https://yuanyuanma03.github.io/TraceGPT/)
 
 ## Why TraceGPT?
 
@@ -83,14 +92,8 @@ git clone https://github.com/YuanyuanMa03/TraceGPT.git
 cd TraceGPT
 pip install -e .
 
-# Run Level 0: Next Token Prediction
-python -m levels.level0_next_token
-
-# Run Level 1: Causal Self-Attention
-python -m levels.level1_causal_attention
-
-# Run Level 2: Transformer Block
-python -m levels.level2_transformer_block
+# Run Level 6 (showcase)
+python -m levels.level6_showcase
 
 # Run all tests
 pytest tests/ bugs/ -v
@@ -100,74 +103,48 @@ pytest tests/ bugs/ -v
 
 ```
 TraceGPT/
-├── README.md
-├── LICENSE                    # MIT
-├── requirements.txt
-├── pyproject.toml
-├── tracegpt/                  # Core library
-│   ├── __init__.py
-│   ├── tracer.py              # TraceUnit + Tracer: records every operation
-│   ├── ops.py                 # Core ops: softmax, causal_mask, layer_norm, linear, relu
-│   ├── report.py              # Markdown report generation
-│   └── utils.py               # Helper functions
-├── levels/                    # Progressive learning levels
-│   ├── level0_next_token.py   # Embedding → Projection → Softmax → Prediction
-│   ├── level1_causal_attention.py  # Q/K/V, Attention, Causal Mask
-│   ├── level2_transformer_block.py  # Full Transformer block
-│   ├── level3_positional_encoding.py  # Sinusoidal PE: why and how
-│   ├── level4_multihead_gpt.py    # Multi-head attention + tiny GPT forward pass
-│   ├── level5_full_gpt.py        # Complete GPT model + autoregressive generation
-│   └── level6_showcase.py        # ⭐ The killer demo: one sentence, fully traced with words
-├── bugs/                      # Common bugs with wrong/correct + tests
-│   ├── 001_softmax_wrong_axis/
-│   ├── 002_causal_mask_reversed/
-│   ├── 003_missing_sqrt_dk/
-│   ├── 004_wrong_qk_transpose/
-│   └── 005_label_shift_bug/
-├── tests/                     # pytest test suite
-├── reports/                   # Generated Markdown reports
-└── paper/                     # Paper draft (coming soon)
+├── tracegpt/          # Core library (pure NumPy)
+│   ├── tracer.py      # Traces every operation
+│   ├── ops.py         # Core ops with explanations
+│   └── report.py      # Markdown report generation
+├── levels/            # 6 progressive learning levels
+│   ├── level0...6     # From embedding → full GPT
+│   └── level6_showcase.py  # ⭐ The killer demo
+├── bugs/              # 7 common Transformer bugs
+└── tests/             # 87 tests, all passing
 ```
 
 ## Learning Path
 
-### Level 0: Next Token Prediction
-The simplest possible language model: look up an embedding, project to vocab logits, softmax, predict. This teaches the fundamental "prediction head" before any attention.
+- **Level 0:** Embedding → prediction
+- **Level 1:** Causal self-attention
+- **Level 2:** Transformer block
+- **Level 3:** Positional encoding
+- **Level 4:** Multi-head attention
+- **Level 5:** Full GPT + generation
+- **Level 6:** ⭐ **Showcase** — word-level traces
 
-### Level 1: Causal Self-Attention
-Build single-head causal self-attention from scratch: Q, K, V projections, attention scores, scaling, causal masking, softmax, weighted sum.
+## What's Different?
 
-### Level 2: Transformer Block
-A complete Transformer block: attention + residual + layer norm + feed-forward network + residual + layer norm.
-
-### Level 0-4: Building Up Step by Step
-Progressive levels that build from embedding to full GPT.
-
-### Level 5: Full GPT Model
-Complete TinyGPT forward pass + autoregressive generation.
-
-### Level 6: ⭐ The Showcase — "One Sentence, Fully Traced"
-**This is TraceGPT's killer demo.** Trace "the cat sat" through every operation
-with word labels, attention heatmaps, and human-readable explanations.
-Every number has a story.
+| Feature | nanoGPT | picoGPT | **TraceGPT** |
+|---------|---------|---------|-------------|
+| Pure NumPy | ❌ PyTorch | ✅ | ✅ |
+| Word-labeled matrices | ❌ | ❌ | ✅ |
+| Attention heatmaps with words | ❌ | ❌ | ✅ |
+| Interactive demo | ❌ | ❌ | ✅ |
+| Bug library | ❌ | ❌ | ✅ |
+| Hand-verifiable | ✅ | ✅ | ✅ |
 
 ## Bug Library
 
-Each bug comes with:
-- `wrong.py` — the buggy implementation
-- `correct.py` — the fix
-- `README.md` — explanation of the bug and how to detect it
-- `test_*.py` — tests that catch the bug
-
-| Bug | Description |
-|-----|------------|
-| 001 | Softmax on wrong axis |
-| 002 | Causal mask reversed (upper instead of lower triangular) |
-| 003 | Missing √d_k scaling in attention |
-| 004 | Q·K^T computed as K·Q^T (wrong transpose) |
-| 005 | Label not shifted for next-token prediction |
-| 006 | Weight tying transpose error |
-| 007 | Generation loop doesn't truncate to max_seq_len |
+7 common Transformer bugs with wrong/correct code + tests:
+- Softmax on wrong axis
+- Causal mask reversed
+- Missing √d_k scaling
+- Wrong Q·K transpose
+- Label shift bug
+- Weight tying transpose error
+- Generation loop truncation
 
 ## Philosophy
 
@@ -184,48 +161,18 @@ Each bug comes with:
 - **Every op exposes:** formula, inputs, output, shape, explanation.
 - **All examples use tiny matrices** (typically 3×4 or smaller).
 
-## Example Output
-
-Running Level 1 produces a Markdown report like:
-
-```markdown
-## Step 4: causal_mask
-
-**Formula:** `M[i][j] = 1 if j ≤ i, else 0`
-
-**Explanation:** Lower-triangular mask: each token can only attend to
-itself and earlier tokens.
-
-### Shapes
-- **seq_len**: ()
-- **output**: (3, 3)
-
-### Output
-```
-[[1. 0. 0.]
- [1. 1. 0.]
- [1. 1. 1.]]
-```
-```
-
 ## Roadmap
 
-- [x] v0.1: Core tracer, ops, 3 levels, 5 bugs, tests
-- [x] v0.2: Multi-head attention, positional encoding
-- [x] v0.3: Full GPT-2 forward pass (tiny model)
-- [ ] v0.3: Full GPT-2 forward pass (tiny model)
-- [ ] v0.4: Training loop with backprop (educational)
-- [ ] v0.5: Interactive Jupyter notebooks
-- [ ] v1.0: Paper, documentation website, CI/CD
+- [x] v0.4: Word-level traces, attention heatmaps, interactive demo
+- [ ] v0.5: Training loop with backprop (educational)
+- [ ] v1.0: Paper, documentation website
 
 ## License
 
 MIT License. See [LICENSE](LICENSE).
 
-## Contributing
+## ⭐ Star on GitHub
 
-Contributions welcome! Please:
-1. Follow the existing code style (no PyTorch, tiny matrices, full traces)
-2. Add tests for new operations
-3. Add bug entries for common mistakes
-4. Keep examples hand-verifiable
+If you've ever stared at a Transformer and thought *"but what do these numbers actually MEAN?"* —
+
+**[Star TraceGPT →](https://github.com/YuanyuanMa03/TraceGPT)**
