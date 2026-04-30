@@ -1,15 +1,21 @@
 # <img src="https://yuanyuanma03.github.io/TraceGPT/banner.svg" width="100%" alt="TraceGPT Banner">
 
-**Every number has a story.**
+**I traced one sentence through a Transformer and showed every number.**
 
-TraceGPT is a Transformer learning framework where you can trace *every single computation* from words to prediction — with word labels, attention heatmaps, and hand-verifiable math. Pure Python + NumPy, zero PyTorch.
+You've seen [nanoGPT](https://github.com/karpathy/nanoGPT). You've seen [minGPT](https://github.com/karpathy/minGPT). You've even seen [picoGPT](https://github.com/jaymody/picoGPT).
+
+But have you seen every number in a Transformer connected to the **actual words**? 🤔
+
+TraceGPT is a Transformer where every matrix has word labels, every attention weight shows which word cares about which, and every prediction traces back to meaning. Pure Python + NumPy, zero PyTorch.
 
 ```
 "the cat sat" → embeddings → attention → prediction → "on"
      ↑              ↑           ↑            ↑
-   words       word-labeled  word-labeled  word-labeled
-               matrices      heatmaps      probabilities
+   words       "cat"=0.9   "cat"→"sat"  "on"=0.45
+               animal      attention=0.40
 ```
+
+**What if every number in a Transformer had a name?**
 
 ## 🌐 Try It Live
 
@@ -58,14 +64,17 @@ Output:
 
 ## Why TraceGPT?
 
-nanoGPT and minGPT give you working code. TraceGPT gives you *understanding*:
+nanoGPT gives you working code. picoGPT gives you tiny code. TraceGPT gives you **understanding**:
 
-- **Words, not just numbers.** Every matrix is labeled with actual tokens.
-- **Attention heatmaps.** See which word attends to which — with words on the axes.
+- **Words, not just numbers.** Every matrix is labeled with actual tokens. You see "cat" = high animal, not just `[0.9, 0.1, 0, ...]`.
+- **Attention heatmaps with words.** See which word attends to which — "sat" looks at "cat" the most.
 - **No PyTorch.** Pure NumPy. Every operation is transparent.
+- **Interactive web demo.** Try it in your browser, zero install.
 - **Hand-verifiable.** Tiny matrices you can check with a calculator.
-- **Bug library.** 7 common Transformer bugs with wrong/correct + tests.
-- **Full GPT model.** Complete TinyGPT with multi-head attention and generation.
+- **Bug library.** 7 common Transformer bugs with wrong/correct implementations and tests.
+- **Full GPT model.** Complete TinyGPT with multi-head attention and autoregressive generation.
+
+TraceGPT is for anyone who has stared at a matrix multiplication and thought: *"but what do these numbers actually MEAN?"*
 
 ## Quick Start
 
