@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TraceGPT — Every Number Has a Story</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --dim: #8b949e;
+    --cyan: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.6;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  header { text-align: center; padding: 40px 0 30px; }
+  header h1 { font-size: 2.4em; margin-bottom: 8px; }
+  header h1 span { color: var(--cyan); }
+  header p { color: var(--dim); font-size: 1.1em; }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 0.8em; font-weight: 600; margin: 0 4px;
+  }
+  .badge-numpy { background: #306998; color: #ffd43b; }
+  .badge-nopytorch { background: var(--red); color: white; opacity: 0.7; }
+
+  /* Input Section */
+  .input-section {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; margin-bottom: 24px;
+  }
+  .input-section h2 { margin-bottom: 12px; font-size: 1.2em; color: var(--cyan); }
+  .sentence-input {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .token-btn {
+    padding: 8px 16px; border: 2px solid var(--border); border-radius: 8px;
+    background: var(--bg); color: var(--text); cursor: pointer; font-size: 1em;
+    transition: all 0.2s;
+  }
+  .token-btn:hover { border-color: var(--cyan); background: #1a2332; }
+  .token-btn.active { border-color: var(--green); background: #1a2e1a; color: var(--green); }
+  .custom-input {
+    flex: 1; min-width: 200px; padding: 8px 12px; border: 2px solid var(--border);
+    border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1em;
+  }
+  .custom-input:focus { outline: none; border-color: var(--cyan); }
+  .trace-btn {
+    padding: 10px 24px; border: none; border-radius: 8px; cursor: pointer;
+    font-size: 1em; font-weight: 600; transition: all 0.2s;
+    background: var(--green); color: #0d1117;
+  }
+  .trace-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .trace-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Trace Steps */
+  .step {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin-bottom: 16px;
+    animation: fadeIn 0.4s ease-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em;
+    background: var(--cyan); color: var(--bg);
+  }
+  .step-title { font-weight: 600; font-size: 1.05em; }
+  .step-desc { color: var(--dim); margin-bottom: 12px; font-size: 0.95em; }
+  .formula {
+    background: #1c2333; border-left: 3px solid var(--purple);
+    padding: 6px 12px; border-radius: 4px; font-family: 'SF Mono', monospace;
+    font-size: 0.9em; color: var(--purple); margin-bottom: 12px;
+    display: inline-block;
+  }
+
+  /* Matrix Display */
+  .matrix-container { overflow-x: auto; margin: 8px 0; }
+  .labeled-matrix { border-collapse: collapse; font-family: 'SF Mono', monospace; font-size: 0.85em; }
+  .labeled-matrix th {
+    padding: 4px 10px; color: var(--cyan); font-weight: 600;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .labeled-matrix th.row-label {
+    text-align: right; color: var(--green); border-right: 1px solid var(--border);
+    border-bottom: none; padding-right: 12px;
+  }
+  .labeled-matrix td {
+    padding: 4px 10px; text-align: right; border-bottom: 1px solid var(--border);
+  }
+  .labeled-matrix td.val-high { color: var(--green); font-weight: 600; }
+  .labeled-matrix td.val-zero { color: var(--dim); }
+  .labeled-matrix td.val-neg { color: var(--red); }
+
+  /* Attention Heatmap */
+  .heatmap-cell {
+    display: inline-block; width: 100%; height: 100%; border-radius: 2px;
+  }
+  .heatmap-table { border-collapse: collapse; margin: 8px 0; }
+  .heatmap-table th {
+    padding: 4px 12px; color: var(--cyan); font-size: 0.9em;
+    border-bottom: 2px solid var(--border);
+  }
+  .heatmap-table th.row-label { color: var(--green); text-align: right; }
+  .heatmap-table td {
+    padding: 0; width: 60px; height: 36px; text-align: center;
+    font-family: 'SF Mono', monospace; font-size: 0.85em;
+    position: relative;
+  }
+  .heatmap-table td span { position: relative; z-index: 1; }
+
+  /* Probability Bars */
+  .prob-row { display: flex; align-items: center; margin: 4px 0; gap: 8px; }
+  .prob-token { width: 70px; text-align: right; font-weight: 600; color: var(--cyan); font-family: 'SF Mono', monospace; }
+  .prob-bar-bg { flex: 1; height: 20px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+  .prob-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease-out; }
+  .prob-val { width: 55px; font-family: 'SF Mono', monospace; font-size: 0.9em; color: var(--dim); }
+  .prob-predicted { color: var(--green); font-weight: 700; }
+  .prob-bar-predicted { background: var(--green); }
+  .prob-bar-normal { background: var(--cyan); opacity: 0.6; }
+
+  /* Insight Box */
+  .insight {
+    background: #1a2332; border: 1px solid #1f3a5f; border-radius: 8px;
+    padding: 10px 14px; margin-top: 10px; font-size: 0.9em;
+  }
+  .insight::before { content: "💡 "; }
+
+  /* Prediction Result */
+  .prediction-result {
+    text-align: center; padding: 24px; background: var(--card);
+    border: 2px solid var(--green); border-radius: 12px; margin-bottom: 16px;
+  }
+  .prediction-result .word { font-size: 2em; color: var(--green); font-weight: 700; }
+  .prediction-result .context { color: var(--dim); font-size: 1.1em; margin-bottom: 8px; }
+  .prediction-result .prob { color: var(--cyan); }
+
+  footer { text-align: center; padding: 30px; color: var(--dim); font-size: 0.9em; }
+  footer a { color: var(--cyan); text-decoration: none; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .container { padding: 12px; }
+    header h1 { font-size: 1.8em; }
+    .labeled-matrix, .heatmap-table { font-size: 0.75em; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Trace<span>GPT</span></h1>
+    <p>Every number has a story. Trace a Transformer, word by word.</p>
+    <div style="margin-top:8px">
+      <span class="badge badge-numpy">Pure NumPy</span>
+      <span class="badge badge-nopytorch">No PyTorch</span>
+    </div>
+  </header>
+
+  <section class="input-section">
+    <h2>📝 Input Sentence</h2>
+    <p style="color:var(--dim);margin-bottom:12px;font-size:0.95em">Click words to build a sentence, or type your own:</p>
+    <div class="sentence-input" id="wordBank">
+      <!-- Populated by JS -->
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px">
+      <input type="text" class="custom-input" id="customInput" placeholder="Type: the cat sat on the mat" />
+      <button class="trace-btn" id="traceBtn" onclick="runTrace()">🔍 Trace It!</button>
+    </div>
+    <div id="currentSentence" style="margin-top:12px;font-size:1.1em;color:var(--green);font-weight:600"></div>
+  </section>
+
+  <div id="traceOutput"></div>
+
+  <footer>
+    <a href="https://github.com/YuanyuanMa03/TraceGPT" target="_blank">⭐ Star on GitHub</a>
+    &nbsp;·&nbsp;
+    TraceGPT — A calculator-verifiable Transformer learning framework
+  </footer>
+</div>
+
+<script>
+// ── Vocabulary with semantic embeddings ──────────────────────
+const DIMS = ["animal", "action", "location", "size", "emotion", "grammar", "time", "concrete"];
+const VOCAB_DATA = {
+  "<PAD>": [0,0,0,0,0,0,0,0],
+  "<EOS>": [0,0,0,0,0,1,0,0],
+  "the":   [0.1,0,0,0,0,0.9,0,0],
+  "cat":   [0.9,0.1,0,0.3,0.2,0,0,0.8],
+  "sat":   [0.1,0.9,0.1,0,0,0,0.3,0.1],
+  "on":    [0,0.1,0.1,0,0,0.9,0,0],
+  "mat":   [0,0,0.9,0.7,0,0,0,0.9],
+  "is":    [0.1,0,0,0,0.8,0,0,0],
+  "happy": [0.1,0,0,0,0.9,0,0,0.1],
+  "a":     [0.1,0,0,0,0,0.9,0,0],
+  "dog":   [0.9,0.1,0,0.7,0.2,0,0,0.8],
+  "ran":   [0.2,0.9,0.2,0,0,0,0.5,0.1],
+  "to":    [0,0.1,0.1,0,0,0.9,0,0],
+  "park":  [0,0,0.9,0.8,0,0,0,0.9],
+  "big":   [0,0,0,0.9,0,0,0,0.8],
+  "small": [0,0,0,0.2,0,0,0,0.8],
+};
+const WORDS = ["the","cat","sat","on","mat","is","happy","a","dog","ran","to","park","big","small"];
+const ALL_WORDS = [...Object.keys(VOCAB_DATA)];
+
+// ── State ──────────────────────────────────────────────────
+let selectedTokens = ["the", "cat", "sat"];
+
+// ── NumPy-like ops in JS ───────────────────────────────────
+function vec(a) { return new Float64Array(a); }
+function zeros(n) { return new Float64Array(n); }
+function matMul(A, B) {
+  const [m, k1] = [A.length, A[0].length];
+  const [k2, n] = [B.length, B[0].length];
+  const C = Array.from({length:m}, () => new Float64Array(n));
+  for (let i = 0; i < m; i++)
+    for (let j = 0; j < n; j++)
+      for (let k = 0; k < k1; k++)
+        C[i][j] += A[i][k] * B[k][j];
+  return C;
+}
+function transpose(A) {
+  const m = A.length, n = A[0].length;
+  return Array.from({length:n}, (_, j) => Float64Array.from({length:m}, (_, i) => A[i][j]));
+}
+function softmax(x) {
+  const max = Math.max(...x);
+  const exps = x.map(v => Math.exp(v - max));
+  const sum = exps.reduce((a,b) => a+b, 0);
+  return exps.map(v => v / sum);
+}
+function causalMask(n) {
+  return Array.from({length:n}, (_, i) => Array.from({length:n}, (_, j) => j <= i ? 1 : 0));
+}
+function sinPE(seqLen, dModel) {
+  const pe = Array.from({length:seqLen}, () => new Float64Array(dModel));
+  for (let pos = 0; pos < seqLen; pos++) {
+    for (let i = 0; i < dModel; i += 2) {
+      const div = Math.pow(10000, i / dModel);
+      pe[pos][i] = Math.sin(pos / div);
+      if (i+1 < dModel) pe[pos][i+1] = Math.cos(pos / div);
+    }
+  }
+  return pe;
+}
+
+// ── Init UI ────────────────────────────────────────────────
+function initWordBank() {
+  const bank = document.getElementById("wordBank");
+  WORDS.forEach(w => {
+    const btn = document.createElement("button");
+    btn.className = "token-btn";
+    btn.textContent = w;
+    btn.onclick = () => toggleWord(w, btn);
+    if (selectedTokens.includes(w)) btn.classList.add("active");
+    bank.appendChild(btn);
+  });
+  updateSentenceDisplay();
+}
+
+function toggleWord(w, btn) {
+  if (selectedTokens.includes(w)) {
+    selectedTokens = selectedTokens.filter(t => t !== w);
+    btn.classList.remove("active");
+  } else {
+    if (selectedTokens.length >= 6) return;
+    selectedTokens.push(w);
+    btn.classList.add("active");
+  }
+  updateSentenceDisplay();
+}
+
+function updateSentenceDisplay() {
+  const el = document.getElementById("currentSentence");
+  if (selectedTokens.length === 0) {
+    el.innerHTML = '<span style="color:var(--dim)">Click words above to build a sentence...</span>';
+  } else {
+    el.textContent = `"${selectedTokens.join(" ")}"`;
+  }
+}
+
+// ── Trace Engine ───────────────────────────────────────────
+function runTrace() {
+  const customVal = document.getElementById("customInput").value.trim();
+  if (customVal) {
+    selectedTokens = customVal.toLowerCase().split(/\s+/).filter(w => VOCAB_DATA[w]);
+  }
+  if (selectedTokens.length === 0) return;
+
+  const btn = document.getElementById("traceBtn");
+  btn.disabled = true;
+  btn.textContent = "Tracing...";
+
+  const output = document.getElementById("traceOutput");
+  output.innerHTML = "";
+
+  // Run computation
+  const steps = computeTrace(selectedTokens);
+
+  // Animate steps
+  steps.forEach((step, i) => {
+    setTimeout(() => {
+      output.innerHTML += renderStep(step, i);
+      if (i === steps.length - 1) {
+        btn.disabled = false;
+        btn.textContent = "🔍 Trace It!";
+      }
+      output.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, i * 300);
+  });
+}
+
+function computeTrace(tokens) {
+  const steps = [];
+  const dModel = 8;
+  const seqLen = tokens.length;
+
+  // 1. Embeddings
+  const embeddings = tokens.map(t => vec(VOCAB_DATA[t]));
+  steps.push({
+    title: "Word Embeddings — Words Become Numbers",
+    desc: `Each word gets an 8-dim vector capturing its meaning. "cat" is high in animal (0.9) and concrete (0.8).`,
+    formula: "e = Embedding[token]",
+    type: "matrix",
+    rowLabels: tokens.map(t => `"${t}"`),
+    colLabels: DIMS,
+    data: embeddings,
+    insight: `"${tokens.map(t=>t).join('" has ')}" — each dimension captures a different aspect of meaning.`
+  });
+
+  // 2. Positional Encoding
+  const pe = sinPE(seqLen, dModel);
+  const withPE = embeddings.map((e, i) => e.map((v, j) => v + pe[i][j]));
+  steps.push({
+    title: "Add Position — Words Get an Address",
+    desc: "Without position info, 'cat sat the' and 'the cat sat' look the same to attention!",
+    formula: "x = e + PE(pos)",
+    type: "matrix",
+    rowLabels: tokens.map(t => `"${t}"`),
+    colLabels: DIMS,
+    data: withPE,
+    insight: "Positional encoding gives each word a unique 'address' so the model knows the order."
+  });
+
+  // 3. Q, K, V
+  const WQ = eye(dModel, 0.5).map((row, i) => row.map((v, j) => v + (j === (i+1)%dModel ? 0.3 : 0)));
+  const WK = eye(dModel, 0.4).map((row, i) => row.map((v, j) => v + (j === (i-1+dModel)%dModel ? 0.3 : 0)));
+  const WV = eye(dModel, 0.6);
+  const Q = matMul(withPE, WQ);
+  const K = matMul(withPE, WK);
+  const V = matMul(withPE, WV);
+
+  steps.push({
+    title: 'Queries — "What am I looking for?"',
+    desc: "Each word formulates a question about what information it needs.",
+    formula: "Q = X · W_Q",
+    type: "matrix",
+    rowLabels: tokens.map(t => `"${t}" asks`),
+    colLabels: DIMS,
+    data: Q,
+  });
+  steps.push({
+    title: 'Keys — "What do I contain?"',
+    desc: "Each word describes what information it has to offer.",
+    formula: "K = X · W_K",
+    type: "matrix",
+    rowLabels: tokens.map(t => `"${t}" has`),
+    colLabels: DIMS,
+    data: K,
+  });
+
+  // 4. Attention Scores
+  const Kt = transpose(K);
+  let scores = matMul(Q, Kt);
+  const dk = Math.sqrt(dModel);
+  scores = scores.map(row => row.map(v => v / dk));
+
+  steps.push({
+    title: "Attention Scores — How Much Does Each Word Care?",
+    desc: "Attention score = how well a Query matches a Key. Higher = more attention.",
+    formula: "scores = Q · Kᵀ / √d_k",
+    type: "matrix",
+    rowLabels: tokens.map(t => `"${t}" →`),
+    colLabels: tokens.map(t => `← "${t}"`),
+    data: scores,
+  });
+
+  // 5. Causal Mask
+  const mask = causalMask(seqLen);
+  const maskedScores = scores.map((row, i) => row.map((v, j) => mask[i][j] ? v : -1e9));
+  const weights = maskedScores.map(row => softmax(Array.from(row)));
+
+  steps.push({
+    title: "Attention Weights — Who Attends to Whom?",
+    desc: "After causal mask + softmax. Each row shows how much a word attends to others. Only past words are visible!",
+    formula: "weights = softmax(scores + mask)",
+    type: "heatmap",
+    rowLabels: tokens,
+    colLabels: tokens,
+    data: weights,
+    insight: tokens.map((t, i) => {
+      const row = weights[i];
+      const maxJ = row.indexOf(Math.max(...row.slice(0, i+1)));
+      return `"${t}" looks most at "${tokens[maxJ]}" (${(row[maxJ]*100).toFixed(0)}%)`;
+    }).join("; ")
+  });
+
+  // 6. Attention Output
+  const attnOut = matMul(weights, V);
+  steps.push({
+    title: "Attention Output — Words Gain Context",
+    desc: "Each word's output is a BLEND of words it attends to. Now 'sat' knows a cat is involved!",
+    formula: "output = weights · V",
+    type: "matrix",
+    rowLabels: tokens.map(t => `"${t}" now`),
+    colLabels: DIMS,
+    data: attnOut,
+  });
+
+  // 7. Prediction
+  const lastVec = attnOut[attnOut.length - 1];
+  const allEmbeds = ALL_WORDS.map(w => vec(VOCAB_DATA[w]));
+  const logits = allEmbeds.map(e => lastVec.reduce((s, v, j) => s + v * e[j], 0));
+  const probs = softmax(logits.map(l => l / 0.5));
+
+  // Sort by prob
+  const indexed = probs.map((p, i) => ({word: ALL_WORDS[i], prob: p, idx: i}));
+  indexed.sort((a, b) => b.prob - a.prob);
+  const predicted = indexed[0];
+
+  steps.push({
+    title: "🎯 Prediction — What Word Comes Next?",
+    desc: `After "${tokens.join(" ")}", the model predicts...`,
+    formula: "P(word) = softmax(logits / temperature)",
+    type: "prediction",
+    probs: indexed.slice(0, 8),
+    predicted: predicted,
+    inputTokens: tokens,
+  });
+
+  return steps;
+}
+
+// ── Renderers ──────────────────────────────────────────────
+function renderStep(step, idx) {
+  let content = '';
+  if (step.type === "matrix") content = renderMatrix(step);
+  else if (step.type === "heatmap") content = renderHeatmap(step);
+  else if (step.type === "prediction") content = renderPrediction(step);
+
+  return `<div class="step">
+    <div class="step-header">
+      <div class="step-num">${idx + 1}</div>
+      <div class="step-title">${step.title}</div>
+    </div>
+    <div class="step-desc">${step.desc}</div>
+    <div class="formula">${step.formula}</div>
+    ${content}
+    ${step.insight ? `<div class="insight">${step.insight}</div>` : ''}
+  </div>`;
+}
+
+function renderMatrix(step) {
+  let html = '<div class="matrix-container"><table class="labeled-matrix"><tr><th></th>';
+  step.colLabels.forEach(l => html += `<th>${l}</th>`);
+  html += '</tr>';
+  step.data.forEach((row, i) => {
+    html += `<tr><th class="row-label">${step.rowLabels[i]}</th>`;
+    row.forEach(v => {
+      const cls = Math.abs(v) < 0.01 ? 'val-zero' : v > 0.5 ? 'val-high' : v < -0.3 ? 'val-neg' : '';
+      html += `<td class="${cls}">${v.toFixed(2)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</table></div>';
+  return html;
+}
+
+function renderHeatmap(step) {
+  let html = '<div class="matrix-container"><table class="heatmap-table"><tr><th></th>';
+  step.colLabels.forEach(l => html += `<th>"${l}"</th>`);
+  html += '</tr>';
+  step.data.forEach((row, i) => {
+    html += `<tr><th class="row-label">"${step.rowLabels[i]}"</th>`;
+    row.forEach(v => {
+      const r = Math.round(88 * v), g = Math.round(166 * v + 40), b = Math.round(255 * v);
+      const bg = v > 0.01 ? `rgba(${r},${g},${b},${Math.max(0.15, v)})` : 'transparent';
+      html += `<td style="background:${bg}"><span>${v.toFixed(2)}</span></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</table></div>';
+  return html;
+}
+
+function renderPrediction(step) {
+  let html = `<div class="prediction-result">
+    <div class="context">"${step.inputTokens.join(" ")}" →</div>
+    <div class="word">"${step.predicted.word}"</div>
+    <div class="prob">probability: ${(step.predicted.prob * 100).toFixed(1)}%</div>
+  </div>`;
+  html += '<div style="max-width:500px">';
+  step.probs.forEach(p => {
+    const isPred = p.word === step.predicted.word;
+    html += `<div class="prob-row">
+      <span class="prob-token ${isPred ? 'prob-predicted' : ''}">"${p.word}"</span>
+      <div class="prob-bar-bg"><div class="prob-bar ${isPred ? 'prob-bar-predicted' : 'prob-bar-normal'}" style="width:${p.prob * 100}%"></div></div>
+      <span class="prob-val">${(p.prob * 100).toFixed(1)}%</span>
+    </div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function eye(n, scale) {
+  return Array.from({length:n}, (_, i) => Float64Array.from({length:n}, (_, j) => i === j ? scale : 0));
+}
+
+// ── Init ───────────────────────────────────────────────────
+initWordBank();
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# TraceGPT
+# <img src="https://yuanyuanma03.github.io/TraceGPT/banner.svg" width="100%" alt="TraceGPT Banner">
 
 **Every number has a story.**
 
@@ -10,6 +10,10 @@ TraceGPT is a Transformer learning framework where you can trace *every single c
    words       word-labeled  word-labeled  word-labeled
                matrices      heatmaps      probabilities
 ```
+
+## 🌐 Try It Live
+
+**👉 [Interactive Demo](https://yuanyuanma03.github.io/TraceGPT/)** — Trace a sentence in your browser, no install needed.
 
 ## The "Aha!" Demo
 
