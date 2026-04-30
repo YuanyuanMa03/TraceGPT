@@ -1,0 +1,95 @@
+┌─────────────────────────────────────────────────────────────────────┐
+│  TraceGPT — Trace a Transformer word by word                         │
+│  What if every number in a Transformer had a name? 🤔                │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                       │
+│   "the cat sat" → embeddings → attention → prediction → "on"        │
+│       ↑              ↑           ↑            ↑                      │
+│     words       "cat"=0.9   "cat"→"sat"  "on"=0.45                  │
+│                animal      attention=0.40                           │
+│                                                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  🔍 Word Embeddings                                                  │
+│                                                                       │
+│        animal  action  grammar                                       │
+│   "the" │  0.10   0.00   0.90   ← it's a grammar word!               │
+│   "cat" │  0.90   0.10   0.00   ← it's an animal!                   │
+│   "sat" │  0.10   0.90   0.00   ← it's a verb! 🎬                   │
+│                                                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  🔥 Attention Heatmap                                                │
+│                                                                       │
+│           the     cat     sat                                        │
+│   ────────────────────────────────────                               │
+│   the  │█████                    │ 1.00  0.00  0.00  ← only itself   │
+│   cat  │░░░░░   ▓▓▓▓▓            │ 0.38  0.62  0.00                  │
+│   sat  │░░░░░   ▒▒▒▒▒   ░░░░░    │ 0.29  0.40  0.31  ← looks at cat! │
+│   ────────────────────────────────────                               │
+│                                                                       │
+│   The model "knows" a cat is sitting! 🤯                            │
+│                                                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  🎯 Prediction                                                       │
+│                                                                       │
+│   After "the cat sat" → What comes next?                            │
+│                                                                       │
+│       dog  ███████░░░░░░░░░░░░░░░░░░░░░░░  0.2585 ← predicted       │
+│       cat  ████░░░░░░░░░░░░░░░░░░░░░░░░░░  0.1516                   │
+│       park  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░  0.1173                   │
+│                                                                       │
+│   "sat" output similar to "dog" (both are animals)                   │
+│                                                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  ✨ What Makes TraceGPT Different                                    │
+│                                                                       │
+│   • Pure NumPy — zero PyTorch                                       │
+│   • Word-labeled matrices — see meanings, not numbers              │
+│   • Attention heatmaps — which word cares about which              │
+│   • Interactive demo — try it in your browser                       │
+│   • 7 common Transformer bugs — learn from mistakes                 │
+│   • 87 passing tests — hand-verifiable                              │
+│                                                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  📚 Learning Path                                                    │
+│                                                                       │
+│   Level 0: Embedding → Prediction                                    │
+│   Level 1: Causal Self-Attention                                     │
+│   Level 2: Transformer Block                                         │
+│   Level 3: Positional Encoding                                       │
+│   Level 4: Multi-Head Attention                                      │
+│   Level 5: Full GPT + Generation                                    │
+│   Level 6: ⭐ Showcase — Word-level traces 🎉                        │
+│                                                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  🌐 Try It Live                                                      │
+│                                                                       │
+│   https://yuanyuanma03.github.io/TraceGPT/                          │
+│                                                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  🐛 Bug Library                                                      │
+│                                                                       │
+│   7 common Transformer bugs (wrong/correct + tests)                 │
+│   • Softmax on wrong axis                                           │
+│   • Causal mask reversed                                            │
+│   • Missing √d_k scaling                                             │
+│   • Wrong Q·K transpose                                             │
+│   • Label shift bug                                                 │
+│   • Weight tying transpose error                                    │
+│   • Generation loop truncation                                       │
+│                                                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  🚀 Quick Start                                                      │
+│                                                                       │
+│   pip install -e .                                                   │
+│   python -m levels.level6_showcase                                  │
+│                                                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  ⭐ Star on GitHub                                                   │
+│                                                                       │
+│   https://github.com/YuanyuanMa03/TraceGPT                          │
+│                                                                       │
+├─────────────────────────────────────────────────────────────────────┤
+│  Inspired by nanoGPT, minGPT, picoGPT                                 │
+│  But every number has a name.                                        │
+│                                                                       │
+└─────────────────────────────────────────────────────────────────────┘

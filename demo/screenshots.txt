@@ -1,0 +1,52 @@
+# TraceGPT Showcase Demo Output
+
+For README and promotional materials.
+
+## Screenshots to Capture
+
+### 1. Header
+```
+╔══════════════════════════════════════════════════════════╗
+║  TraceGPT Showcase: One Sentence, Fully Traced          ║
+║  "the cat sat" → What comes next?                      ║
+╚══════════════════════════════════════════════════════════╝
+```
+
+### 2. Word Embeddings
+```
+            animal    action  location      size   emotion   grammar      time  concrete
+  "the" │     0.100     0.000     0.000     0.000     0.000     0.900     0.000     0.000 │
+  "cat" │     0.900     0.100     0.000     0.300     0.200     0.000     0.000     0.800 │
+  "sat" │     0.100     0.900     0.100     0.000     0.000     0.000     0.300     0.100 │
+```
+
+### 3. Attention Heatmap
+```
+Attention Weights: "the cat sat"
+
+           the     cat     sat
+  ────────────────────────
+  the  │█████                    │ 1.00  0.00  0.00
+  cat  │░░░░░   ▓▓▓▓▓            │ 0.38  0.62  0.00
+  sat  │░░░░░   ▒▒▒▒▒   ░░░░░    │ 0.29  0.40  0.31
+```
+
+### 4. Prediction
+```
+           dog  ███████░░░░░░░░░░░░░░░░░░░░░░░  0.2585 ← predicted
+           cat  ████░░░░░░░░░░░░░░░░░░░░░░░░░░  0.1516
+          park  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░  0.1173
+           mat  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░  0.1027
+```
+
+### 5. Final Summary
+```
+┌──────────────────────────────────────────────────────┐
+│  Full trace complete!                                 │
+│  "the cat sat" → "dog"                         │
+│                                                        │
+│  Every number above is connected to a word.            │
+│  Every operation is visible and verifiable.            │
+│  This is TraceGPT: formula → trace → understanding    │
+└──────────────────────────────────────────────────────┘
+```
