@@ -1,0 +1,11 @@
+# Generated Reports
+
+Markdown reports are generated here when running the levels:
+
+```bash
+python -m levels.level0_next_token    # → level0_next_token.md
+python -m levels.level1_causal_attention  # → level1_causal_attention.md
+python -m levels.level2_transformer_block # → level2_transformer_block.md
+```
+
+Reports contain the full execution trace: formula, inputs, outputs, shapes, and explanations for every operation.
