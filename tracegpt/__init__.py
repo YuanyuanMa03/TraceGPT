@@ -10,4 +10,5 @@ __version__ = "0.1.0"
 
 from tracegpt.tracer import Tracer, TraceUnit
 from tracegpt.ops import softmax, causal_mask, layer_norm, linear, relu, sinusoidal_position_encoding, multi_head_attention
+from tracegpt.model import TinyGPT, GPTConfig
 from tracegpt.report import export_report

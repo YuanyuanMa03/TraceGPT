@@ -62,7 +62,8 @@ TraceGPT/
 │   ├── level1_causal_attention.py  # Q/K/V, Attention, Causal Mask
 │   ├── level2_transformer_block.py  # Full Transformer block
 │   ├── level3_positional_encoding.py  # Sinusoidal PE: why and how
-│   └── level4_multihead_gpt.py    # Multi-head attention + tiny GPT forward pass
+│   ├── level4_multihead_gpt.py    # Multi-head attention + tiny GPT forward pass
+│   └── level5_full_gpt.py        # Complete GPT model + autoregressive generation
 ├── bugs/                      # Common bugs with wrong/correct + tests
 │   ├── 001_softmax_wrong_axis/
 │   ├── 002_causal_mask_reversed/
@@ -108,6 +109,8 @@ Each bug comes with:
 | 003 | Missing √d_k scaling in attention |
 | 004 | Q·K^T computed as K·Q^T (wrong transpose) |
 | 005 | Label not shifted for next-token prediction |
+| 006 | Weight tying transpose error |
+| 007 | Generation loop doesn't truncate to max_seq_len |
 
 ## Philosophy
 
@@ -152,6 +155,7 @@ itself and earlier tokens.
 
 - [x] v0.1: Core tracer, ops, 3 levels, 5 bugs, tests
 - [x] v0.2: Multi-head attention, positional encoding
+- [x] v0.3: Full GPT-2 forward pass (tiny model)
 - [ ] v0.3: Full GPT-2 forward pass (tiny model)
 - [ ] v0.4: Training loop with backprop (educational)
 - [ ] v0.5: Interactive Jupyter notebooks
