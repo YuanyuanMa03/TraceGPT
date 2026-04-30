@@ -1,33 +1,73 @@
 # TraceGPT
 
-**A calculator-verifiable Transformer learning framework.**
+**Every number has a story.**
 
-TraceGPT turns every hidden tensor operation in GPT-style models into a readable, auditable, and reproducible trace.
+TraceGPT is a Transformer learning framework where you can trace *every single computation* from words to prediction — with word labels, attention heatmaps, and hand-verifiable math. Pure Python + NumPy, zero PyTorch.
 
 ```
-formula → hand calculation → NumPy code → tensor trace → Markdown report
+"the cat sat" → embeddings → attention → prediction → "on"
+     ↑              ↑           ↑            ↑
+   words       word-labeled  word-labeled  word-labeled
+               matrices      heatmaps      probabilities
 ```
+
+## The "Aha!" Demo
+
+```bash
+python -m levels.level6_showcase
+```
+
+Output:
+
+```
+╔══════════════════════════════════════════════════════════╗
+║  TraceGPT Showcase: One Sentence, Fully Traced          ║
+║  "the cat sat" → What comes next?                      ║
+╚══════════════════════════════════════════════════════════╝
+
+  Step 2: Word Embeddings — Words Become Numbers
+
+            animal    action  location      size   emotion   grammar      time  concrete
+  "the" │     0.100     0.000     0.000     0.000     0.000     0.900     0.000     0.000
+  "cat" │     0.900     0.100     0.000     0.300     0.200     0.000     0.000     0.800
+  "sat" │     0.100     0.900     0.100     0.000     0.000     0.000     0.300     0.100
+
+  💡 "cat" has high animal (0.9) and concrete (0.8)
+     "sat" has high action (0.9) — it's a verb!
+     "the" is mostly grammar (0.9)
+
+  Step 6: Attention Weights — "the cat sat"
+
+           the     cat     sat
+   ────────────────────────
+   the │█████                    │ 1.00  0.00  0.00
+   cat │░░░░░   ▓▓▓▓▓            │ 0.38  0.62  0.00
+   sat │░░░░░   ▒▒▒▒▒   ░░░░░    │ 0.29  0.40  0.31
+
+  💡 "cat" pays most attention to itself (0.62)
+     "sat" looks at "cat" the most (0.40) — it "knows" a cat sat!
+
+  🎯 Prediction: "dog" (prob=0.26)
+```
+
+**Every matrix has word labels. Every attention weight tells a story.**
 
 ## Why TraceGPT?
 
-Most Transformer tutorials give you PyTorch code that works, but you can't *see* what's happening inside. TraceGPT is different:
+nanoGPT and minGPT give you working code. TraceGPT gives you *understanding*:
 
-- **No PyTorch.** Pure Python + NumPy. Every operation is transparent.
-- **Tiny matrices.** Every example uses 3×4 matrices you can verify by hand.
-- **Full traces.** Every step records its formula, inputs, outputs, shapes, and explanation.
-- **Bug library.** Common Transformer bugs with wrong/correct implementations and tests.
-- **Markdown reports.** Beautiful, human-readable execution reports.
-
-TraceGPT is for students, researchers, and anyone who wants to *truly understand* Transformers — not just use them.
+- **Words, not just numbers.** Every matrix is labeled with actual tokens.
+- **Attention heatmaps.** See which word attends to which — with words on the axes.
+- **No PyTorch.** Pure NumPy. Every operation is transparent.
+- **Hand-verifiable.** Tiny matrices you can check with a calculator.
+- **Bug library.** 7 common Transformer bugs with wrong/correct + tests.
+- **Full GPT model.** Complete TinyGPT with multi-head attention and generation.
 
 ## Quick Start
 
 ```bash
-# Clone
-git clone https://github.com/your-username/TraceGPT.git
+git clone https://github.com/YuanyuanMa03/TraceGPT.git
 cd TraceGPT
-
-# Install (no dependencies beyond NumPy)
 pip install -e .
 
 # Run Level 0: Next Token Prediction
@@ -63,7 +103,8 @@ TraceGPT/
 │   ├── level2_transformer_block.py  # Full Transformer block
 │   ├── level3_positional_encoding.py  # Sinusoidal PE: why and how
 │   ├── level4_multihead_gpt.py    # Multi-head attention + tiny GPT forward pass
-│   └── level5_full_gpt.py        # Complete GPT model + autoregressive generation
+│   ├── level5_full_gpt.py        # Complete GPT model + autoregressive generation
+│   └── level6_showcase.py        # ⭐ The killer demo: one sentence, fully traced with words
 ├── bugs/                      # Common bugs with wrong/correct + tests
 │   ├── 001_softmax_wrong_axis/
 │   ├── 002_causal_mask_reversed/
@@ -86,13 +127,16 @@ Build single-head causal self-attention from scratch: Q, K, V projections, atten
 ### Level 2: Transformer Block
 A complete Transformer block: attention + residual + layer norm + feed-forward network + residual + layer norm.
 
-### Level 3: Sinusoidal Positional Encoding
-Understand why Transformers need positional encoding (attention is permutation-invariant!),
-and how sinusoidal encoding gives each position a unique fingerprint.
+### Level 0-4: Building Up Step by Step
+Progressive levels that build from embedding to full GPT.
 
-### Level 4: Multi-Head Attention + Tiny GPT Forward Pass
-A complete tiny GPT forward pass: token embedding + positional encoding → multi-head causal
-attention (2 heads) → residual + LayerNorm → FFN → residual + LayerNorm → output projection → softmax → prediction.
+### Level 5: Full GPT Model
+Complete TinyGPT forward pass + autoregressive generation.
+
+### Level 6: ⭐ The Showcase — "One Sentence, Fully Traced"
+**This is TraceGPT's killer demo.** Trace "the cat sat" through every operation
+with word labels, attention heatmaps, and human-readable explanations.
+Every number has a story.
 
 ## Bug Library
 
